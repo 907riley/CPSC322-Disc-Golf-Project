@@ -364,7 +364,7 @@ class MyNaiveBayesClassifier:
         Returns:
             y_predicted(list of obj): The predicted target y values (parallel to X_test)
         """
-
+        print(self.posteriors)
         # make a list of preds
         preds = []
         # for len(X_test)
@@ -379,6 +379,7 @@ class MyNaiveBayesClassifier:
         #       for len(X_test[i])
                 for x in range(len(X_test[i])):
         #           list_val *= posteriors at curr prior, at curr attribute, [0] / [1]
+                    # print(self.posteriors.get(vals[j][0]).get(x), X_test[i][x])
                     num = self.posteriors.get(vals[j][0]).get(x).get(X_test[i][x])[0]
                     den = self.posteriors.get(vals[j][0]).get(x).get(X_test[i][x])[1]
                     # print(num, den)
