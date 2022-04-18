@@ -364,7 +364,7 @@ class MyNaiveBayesClassifier:
         Returns:
             y_predicted(list of obj): The predicted target y values (parallel to X_test)
         """
-        print(self.posteriors)
+        # print(self.posteriors)
         # make a list of preds
         preds = []
         # for len(X_test)
@@ -380,10 +380,13 @@ class MyNaiveBayesClassifier:
                 for x in range(len(X_test[i])):
         #           list_val *= posteriors at curr prior, at curr attribute, [0] / [1]
                     # print(self.posteriors.get(vals[j][0]).get(x), X_test[i][x])
-                    num = self.posteriors.get(vals[j][0]).get(x).get(X_test[i][x])[0]
-                    den = self.posteriors.get(vals[j][0]).get(x).get(X_test[i][x])[1]
-                    # print(num, den)
-                    vals[j][1] *=  num / den 
+                    if self.posteriors.get(vals[j][0]).get(x).get(X_test[i][x]) is None:
+                        vals[j][1] * 0
+                    else:
+                        num = self.posteriors.get(vals[j][0]).get(x).get(X_test[i][x])[0]
+                        den = self.posteriors.get(vals[j][0]).get(x).get(X_test[i][x])[1]
+                        # print(num, den)
+                        vals[j][1] *=  num / den 
         #   then append largest value key to list of preds
             vals.sort(key=operator.itemgetter(-1), reverse=True)
             preds.append(vals[0][0])

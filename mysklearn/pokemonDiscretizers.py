@@ -131,7 +131,6 @@ def experience_growth_discretizer(x):
 def height_m_discretizer(x):
     """Runs a list of height_m values through a discretizer
        [0.1, 1.54, 2.98, 4.42, 5.86, 7.3, 8.74, 10.18, 11.62, 13.06, 14.5]
-       no instances in 6, 8, 9
     Args:
         x (list): the list of values to discretize
     Returns:
@@ -139,7 +138,13 @@ def height_m_discretizer(x):
     """
     classification = []
     for val in x:
-        if val > 10.18:
+        if val > 13.06:
+            classification.append(10)
+        elif val > 11.62:
+            classification.append(9)
+        elif val > 10.18:
+            classification.append(8)
+        elif val > 8.74:
             classification.append(7)
         elif val > 7.3:
             classification.append(6)

@@ -38,14 +38,15 @@ def compute_euclidean_distance(v1, v2):
     """
     dist = 0
     sum_ = 0
-    if len(v1) != 0 and len(v2) != 0 and (isinstance(v1[0], int) or (isinstance(v1[0], float))):
+    # print(v1)
+    if len(v1) != 0 and len(v2) != 0:
         for i in range(len(v1)):
-            sum_ += ((v1[i] - v2[i]) ** 2)
-
-        dist = (sum_) ** (1/2)
-    else:
-        if v1 != v2:
-            dist = 1
+            if (isinstance(v1[i], int) or (isinstance(v1[i], float))):
+                sum_ += ((v1[i] - v2[i]) ** 2)
+                dist = (sum_) ** (1/2) 
+            else:
+                if v1 != v2:
+                    dist = 1
     return dist
 
 def auto_discretizer(x):
@@ -573,7 +574,7 @@ def traverse_tree(tree, x):
         tree[1]: or the leaf node instance that it predicts
     """
     if tree[0] == "Leaf":
-        # print("returning this value", tree[1])
+        # print(tree[1], "", end="")
         return tree[1]
     # print("tree: ", tree)
 
@@ -636,6 +637,56 @@ def basketball_titanic_helper(title, confusion_matrix, labels):
     print(title + ":")
     print()
     print(" BASKETBALL     A   H   Total    Recognition (%)")
+    print("_____________  ___  ___  _______  _________________")
+    
+    for i in range(len(confusion_matrix)):
+        # print out init spaces
+        j = len(labels[i])
+        while j < 13:
+            print(" ", end="")
+            j += 1
+        # print out ranking number
+        print(labels[i], end="")
+
+        # now print each of the confusin matrix values at i
+        row_total = 0
+        for j in range(len(confusion_matrix[i])):
+            space = len(str(confusion_matrix[i][j]))
+            # print out spaces
+            while space < 5:
+                print(" ", end="")
+                space += 1
+            # print out confusion matrix value at that index
+            print(confusion_matrix[i][j], end="")
+            row_total += confusion_matrix[i][j]
+        
+        # print out total acconting for space
+        space = len(str(row_total))
+        while space < 9:
+            print(" ", end="")
+            space += 1
+        print(row_total, end="")
+
+        # print out recognition %
+        recog = 0.0
+        if row_total != 0:
+            recog = round((confusion_matrix[i][i] / row_total) * 100, ndigits=2)
+        space = len(str(recog))
+        while space < 19:
+            print(" ", end="")
+            space += 1
+        print(recog)
+
+      
+def pokemon_matrix_print_helper(title, confusion_matrix, labels):
+    """Helper for pretty printing the confusion matrix
+    Args:
+        title (str): the title of the confusion matrix
+        confusion_matrix (2D list): the confusion matrix
+    """
+    print(title + ":")
+    print()
+    print("Pokemon Legend  0    1   Total    Recognition (%)")
     print("_____________  ___  ___  _______  _________________")
     
     for i in range(len(confusion_matrix)):
