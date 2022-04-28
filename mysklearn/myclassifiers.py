@@ -452,7 +452,10 @@ class MyDecisionTreeClassifier:
         # print("Tree:", self.tree)
         predictions = []
         for i in range(len(X_test)):
-            predictions.append(myutils.traverse_tree(self.tree, X_test[i]))
+            pred = myutils.traverse_tree(self.tree, X_test[i])
+            if pred is None:
+                print("NO PREDICTION")
+            predictions.append(pred)
         return predictions
 
     def print_decision_rules(self, attribute_names=None, class_name="class"):

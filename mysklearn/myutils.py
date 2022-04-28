@@ -472,7 +472,7 @@ def tdidt(current_instances, available_attributes, gen_attribute_domains):
     # for each partition, repeat unless one of the following occurs (base case)
 
     for att_value, att_partition in partitions.items():
-        # print("current attribute value:", att_value, len(att_partition))
+        # print("current attribute value:", att_value, att_partition)
         value_subtree = ["Value", att_value]
         #    CASE 1: all class labels of the partition are the same => make a leaf node
         if len(att_partition) > 0 and all_same_class(att_partition):
@@ -506,6 +506,7 @@ def tdidt(current_instances, available_attributes, gen_attribute_domains):
             # with a majority vote leaf node
             # change tree to be a majority vote leaf node instead of a branch
         else: # the previous conditions are all false... recurse!
+            # print("ELSE")
             subtree = tdidt(att_partition, available_attributes.copy(), gen_attribute_domains)
             # note the copy
             # TODO: append subtree to value_subtree and to tree
@@ -576,16 +577,33 @@ def traverse_tree(tree, x):
     if tree[0] == "Leaf":
         # print(tree[1], "", end="")
         return tree[1]
-    # print("tree: ", tree)
+    # print("tree: ", tree, x)
 
     index = int((tree[1])[3:])
     # print(index, x)
 
     # for each possible value for the attribute
     # check to see which one matches and return that tree
+    # CUSTOM FOR POKEMONE DATASET
+    legend = 0
+    non_legend = 0
+
     for i in range(2, len(tree)):
         if tree[i][1] == x[index]:
+            # print("going down", tree[i][2])
             return traverse_tree(tree[i][2], x)
+        else:
+            # print("not matching current tree branch", tree[i], " for ", x, x[index])
+            if tree[i][2][1] == '1':
+                legend += 1
+            elif tree[i][2][1] == '0':
+                non_legend += 1
+    # print("outside for loop", tree)
+    # NO PREDICTION SO PICK MAJORITY HERE
+    if legend > non_legend:
+        return '1'
+    else:
+        return '0'
 
 
 def print_decision_rules_recursive(tree, rules, attribute_names=None, class_name="class"):
