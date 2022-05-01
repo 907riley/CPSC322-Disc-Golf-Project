@@ -31,7 +31,7 @@ def test_random_forest_fit():
         interview_dataset.append(temp)
 
     forest = MyRandomForestClassifier(20, 7, 2)
-    forest.fit(interview_dataset, 4)
+    forest.fit(interview_dataset, 4, [["False", 0], ["True", 0]])
 
     # since it's random the most testing we can really do is to look
     # at the size of the self.forest var
@@ -73,7 +73,7 @@ def test_random_forest_predict():
         interview_dataset.append(temp)
 
     forest = MyRandomForestClassifier(20, 7, 2)
-    forest.fit(interview_dataset, 4)
+    forest.fit(interview_dataset, 4, [["False", 0], ["True", 0]])
 
     # using test instances from previous tests
     test_instances_interview = [["Junior", "Java", "yes", "no"], ["Junior", "Java", "yes", "yes"]]

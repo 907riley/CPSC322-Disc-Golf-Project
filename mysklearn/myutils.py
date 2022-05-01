@@ -548,7 +548,7 @@ def fit_starter_code(X_train, y_train):
     """
     # TODO: programmatically extract the header (e.g. ["att0", "att1", ...])
     gen_attribute_domains = extract_attribute_domains(X_train)
-    # print(gen_attribute_domains)
+    # print("attributes in tree fit",gen_attribute_domains)
     # and atract the attribute domains
     # now, I advise stitching X_train and y_train together
     train = [X_train[i] + [y_train[i]] for i in range(len(X_train))]

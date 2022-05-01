@@ -9,7 +9,7 @@ Description: This program contains a series of testing classes
 """
 
 import operator
-from re import L
+import copy
 from mysklearn import myutils
 from mysklearn.mysimplelinearregressor import MySimpleLinearRegressor
 import mysklearn.myevaluation as myevaluation
@@ -547,7 +547,9 @@ class MyRandomForestClassifier:
             temp = data[i]
             temp.pop(class_index)
             X.append(temp)
-        
+        # print("X", X)
+        # print("y", y)
+        # print("data",self.data)
         test, remainder = myutils.random_forest_stratified_splitter(X, y)
         # print("test",test, "remainder",remainder)
 
@@ -560,7 +562,8 @@ class MyRandomForestClassifier:
 
         X_remainder = [X[val] for val in remainder]
         y_remainder = [y[val] for val in remainder]
-        # print(X_remainder, y_remainder)
+        # print("X_remainder",X_remainder)
+        # print("y_remainder",y_remainder)
 
         # now build the classifiers
         # sample is training while out of bad is validation
@@ -599,7 +602,7 @@ class MyRandomForestClassifier:
             # now we have a reduced cols and y remainder to pass into a decision tree classifier
             tree = MyDecisionTreeClassifier()
             tree.fit(X_reduced_sample, y_sample)
-            # print(tree.tree)
+            # print("Tree in fit",tree.tree)
             
             y_pred = tree.predict(X_reduced_out_of_bag, self.class_labels)
             correct = 0
@@ -608,7 +611,7 @@ class MyRandomForestClassifier:
                 if y_pred[i] == y_out_of_bag[i]:
                     correct += 1
             accuracy = round(correct / len(y_pred), 3)
-            forest.append([tree, accuracy])
+            forest.append([tree, chosen_attributes, accuracy])
         # now assign to actual forest var
         self.forest = forest
 
@@ -640,9 +643,19 @@ class MyRandomForestClassifier:
         y_pred = []
 
         for i in range(len(self.best_trees)):
-            y_pred.append(self.best_trees[i][0].predict(X_test, self.class_labels))
+            # print(X_test)
+            # print("chosen attributes", self.best_trees[i][1])
+            # customize a copy of Xtest for this run
+            X_test_reduced = copy.deepcopy(X_test)
+            for j in range(len(X_test)):
+                temp = []
+                for val in self.best_trees[i][1]:
+                    temp.append(X_test[j][val])
+                X_test_reduced[j] = temp
+            # print("Tree",self.best_trees[i][0].tree)
+            y_pred.append(self.best_trees[i][0].predict(X_test_reduced, self.class_labels))
         # print(y_pred, y_test)
-        print(y_pred)
+        # print(y_pred)
         voted_y_pred = myutils.majority_vote(y_pred)
         
         return voted_y_pred
