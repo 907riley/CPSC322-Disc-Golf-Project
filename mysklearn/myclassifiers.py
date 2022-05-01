@@ -9,8 +9,10 @@ Description: This program contains a series of testing classes
 """
 
 import operator
+from re import L
 from mysklearn import myutils
 from mysklearn.mysimplelinearregressor import MySimpleLinearRegressor
+import mysklearn.myevaluation as myevaluation
 
 class MySimpleLinearRegressionClassifier:
     """Represents a simple linear regression classifier that discretizes
@@ -437,12 +439,13 @@ class MyDecisionTreeClassifier:
         self.tree = myutils.fit_starter_code(X_train, y_train)
         # print("IN FIT", self.tree)
 
-    def predict(self, X_test):
+    def predict(self, X_test, class_labels):
         """Makes predictions for test instances in X_test.
 
         Args:
             X_test(list of list of obj): The list of testing samples
                 The shape of X_test is (n_test_samples, n_features)
+            class_labels (list of class_labels): for handling unseen possible attributes
 
         Returns:
             y_predicted(list of obj): The predicted target y values (parallel to X_test)
@@ -452,7 +455,7 @@ class MyDecisionTreeClassifier:
         # print("Tree:", self.tree)
         predictions = []
         for i in range(len(X_test)):
-            pred = myutils.traverse_tree(self.tree, X_test[i])
+            pred = myutils.traverse_tree(self.tree, X_test[i], class_labels)
             if pred is None:
                 print("NO PREDICTION")
             predictions.append(pred)
@@ -489,3 +492,157 @@ class MyDecisionTreeClassifier:
             You will need to install graphviz in the Docker container as shown in class to complete this method.
         """
         pass # TODO: (BONUS) fix this
+
+class MyRandomForestClassifier:
+    """Represents a decision tree classifier.
+
+    Attributes:
+        forest(list MyDecisionTreeClassifiers): The list of decision trees.
+        best_trees (list MyDecisionTreeClassifiers): The list of the M best decision trees.
+        N(int): The number of trees to generate 
+        M(int): The number of top trees to grab
+        F(int): The number of attributes to use for each tree
+        data(list of list): The data to predict over.
+        class_label(int): the index of the class_label to predict
+        accuracy(double): the accuracy of the M best trees
+        class_labels(list): helpful for keeping track of possible classes
+    Notes:
+        Split into a 1/3 for test and 2/3 for classifier stratified tests
+        For N
+            Use bootstrapping to create a 63% training and 36% validation set
+            Reduced the test and and training down to just F attributes
+            Create a classifier with the F attribute set
+            Determine accuracy with the validation set
+        Pick the best M classifiers
+        Use the test set from the first step to determine the accuracy with simple maj voting 
+    """
+    def __init__(self, N, M, F):
+        """Initializer for MyRandomForestClassifier
+        """
+        self.forest = None
+        self.best_trees = None
+        self.N = N
+        self.M = M
+        self.F = F
+        self.data = None
+        self.class_index = None
+        self.accuracy = None
+        self.class_labels = None
+    
+    def fit(self, data, class_index, class_labels):
+        """Takes in the data and generates all the trees
+        Args:
+            data (list of lists): The data to predict over
+            class_index (int): the index of the class label
+        """
+        self.class_index = class_index
+        self.data = data
+        self.class_labels = class_labels
+
+        # split into 1/3 test 2/3 classifier set
+        # need to ensure that the class split is even in both
+        y = [data[i][class_index] for i in range(len(data))]
+        X = []
+        for i in range(len(data)):
+            temp = data[i]
+            temp.pop(class_index)
+            X.append(temp)
+        
+        test, remainder = myutils.random_forest_stratified_splitter(X, y)
+        # print("test",test, "remainder",remainder)
+
+        # now grab the actual rows
+        # print("data", data)
+        X_test = [X[val] for val in test]
+        y_test = [y[val] for val in test]
+        # print("X_test",X_test)
+        # print("y_test", y_test)
+
+        X_remainder = [X[val] for val in remainder]
+        y_remainder = [y[val] for val in remainder]
+        # print(X_remainder, y_remainder)
+
+        # now build the classifiers
+        # sample is training while out of bad is validation
+
+        # init the forest
+        forest = []
+
+        # put all the col indexes into a list for selecting random F
+        attributes = [i for i in range(len(X[0]))]
+
+        for i in range(self.N):
+            X_sample, X_out_of_bag, y_sample, y_out_of_bag = myevaluation.bootstrap_sample(X_remainder, y_remainder)
+            # print(len(X_sample), len(y_sample))
+            # print(len(X_out_of_bag), len(y_out_of_bag))
+            chosen_attributes = myutils.random_attribute_selection(attributes, self.F)
+            # sorting so we can keep track of attributes better
+            chosen_attributes.sort()
+            # print(chosen_attributes)
+            
+            # now we need to reduce the X_sample to just those attributes
+            X_reduced_sample = []
+            # print(X_sample)
+            for i in range(len(X_sample)):
+                samp = []
+                for val in chosen_attributes:   
+                    samp.append(X_sample[i][val])
+                X_reduced_sample.append(samp)
+            # also reduce X_out_of_bag
+            X_reduced_out_of_bag = []
+            for i in range(len(X_out_of_bag)):
+                out_of_bag = []
+                for val in chosen_attributes:   
+                    out_of_bag.append(X_out_of_bag[i][val])
+                X_reduced_out_of_bag.append(out_of_bag)
+
+            # now we have a reduced cols and y remainder to pass into a decision tree classifier
+            tree = MyDecisionTreeClassifier()
+            tree.fit(X_reduced_sample, y_sample)
+            # print(tree.tree)
+            
+            y_pred = tree.predict(X_reduced_out_of_bag, self.class_labels)
+            correct = 0
+            # now calculate the accuracy
+            for i in range(len(y_pred)):
+                if y_pred[i] == y_out_of_bag[i]:
+                    correct += 1
+            accuracy = round(correct / len(y_pred), 3)
+            forest.append([tree, accuracy])
+        # now assign to actual forest var
+        self.forest = forest
+
+        # find the best M now
+        forest.sort(reverse=True,key=operator.itemgetter(-1))
+
+        best_trees = forest[:self.M]
+        self.best_trees = best_trees
+
+        # now find the accuracy of the ensemble
+        voted_y_pred = self.predict(X_test)
+        
+        # find ensemble accuracy now
+        correct = 0
+        # now calculate the accuracy
+        for i in range(len(voted_y_pred)):
+            if voted_y_pred[i] == y_test[i]:
+                correct += 1
+        self.accuracy = round(correct/len(voted_y_pred), 3)
+
+
+    def predict(self, X_test):
+        """Looks at the best trees and makes a prediction based off of 
+           majority voting
+        Returns:
+            the prediction
+        """
+
+        y_pred = []
+
+        for i in range(len(self.best_trees)):
+            y_pred.append(self.best_trees[i][0].predict(X_test, self.class_labels))
+        # print(y_pred, y_test)
+        print(y_pred)
+        voted_y_pred = myutils.majority_vote(y_pred)
+        
+        return voted_y_pred

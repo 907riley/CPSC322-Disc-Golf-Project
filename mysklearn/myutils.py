@@ -12,6 +12,7 @@ import copy
 import importlib
 import math
 import operator
+from random import random
 import numpy as np
 from sklearn.metrics import accuracy_score
 # # uncomment once you paste your mypytable.py into mysklearn package
@@ -566,11 +567,12 @@ def fit_starter_code(X_train, y_train):
     # note: unit test is going to assert that tree == interview_tree_solution
     # mind (the attribute domain ordering)
 
-def traverse_tree(tree, x):
+def traverse_tree(tree, x, class_labels):
     """traverse_tree recursively
     Args:
         tree (tree list): the tree to traverse
         x (list): the attributes to traverse down
+        class_labels (list): for handling unseen instances
     Returns:
         tree[1]: or the leaf node instance that it predicts
     """
@@ -584,26 +586,24 @@ def traverse_tree(tree, x):
 
     # for each possible value for the attribute
     # check to see which one matches and return that tree
-    # CUSTOM FOR POKEMONE DATASET
-    legend = 0
-    non_legend = 0
+
 
     for i in range(2, len(tree)):
+        # print(tree, i, x, index)
         if tree[i][1] == x[index]:
             # print("going down", tree[i][2])
-            return traverse_tree(tree[i][2], x)
+            return traverse_tree(tree[i][2], x, class_labels)
         else:
             # print("not matching current tree branch", tree[i], " for ", x, x[index])
-            if tree[i][2][1] == '1':
-                legend += 1
-            elif tree[i][2][1] == '0':
-                non_legend += 1
+            for j in range(len(class_labels)):
+                if tree[i][2][1] == class_labels[j][0]:
+                    class_labels[j][1] += 1
     # print("outside for loop", tree)
     # NO PREDICTION SO PICK MAJORITY HERE
-    if legend > non_legend:
-        return '1'
-    else:
-        return '0'
+    # print("IN SPECIAL CHECK",class_labels)
+
+    class_labels.sort(reverse=True,key=operator.itemgetter(-1, 0))
+    return class_labels[0][0]
 
 
 def print_decision_rules_recursive(tree, rules, attribute_names=None, class_name="class"):
@@ -744,3 +744,109 @@ def pokemon_matrix_print_helper(title, confusion_matrix, labels):
             print(" ", end="")
             space += 1
         print(recog)
+
+def random_attribute_selection(attributes, F):
+    # shuffle and pick the first F
+    shuffled = attributes[:]
+    np.random.shuffle(shuffled)
+    return shuffled[:F]
+
+def random_forest_stratified_splitter(X, y):
+    """Helper for splitting data into 1/3 2/3 sets
+    Args:
+        X (list of list): the data
+        y (list of class values)
+    Returns:
+        test (list of indices): the rows to use for test
+        remainder (list of indices): the rows to use for builing the classifier
+    """
+    # count up the instances of each class in y
+    classes = []
+    for val in y:
+        if [val] not in classes:
+            classes.append([val])
+
+    for i in range(len(classes)):
+        classes[i].append(0)
+
+    for val in y:
+        for i in range(len(classes)):
+            if classes[i][0] == val:
+                classes[i][1] += 1
+
+    # make subgroups of instances
+    subgroups = [[] for _ in classes]
+
+    for i in range(len(X)):
+        for j in range(len(classes)):
+            if y[i] == classes[j][0]:
+                subgroups[j].append(i)
+    # print(subgroups)
+
+    # shuffle so we pull values from everywhere
+    for i in range(len(subgroups)):
+        np.random.shuffle(subgroups[i])
+
+    # now take 1/3 of each and place the rest in classifier set
+    test = []
+    remainder = []
+    for i in range(len(subgroups)):
+        size = round(len(subgroups[i]) / 3)
+        test += subgroups[i][:size]
+        remainder += subgroups[i][size:]
+        # print(subgroups[i][:size], subgroups[i][size:])
+    # print(np.shuffle(test), np.shuffle(classifier))
+    return test, remainder
+
+def majority_vote(Y_pred):
+    """Helper function that performs majority voting
+    Args:
+        Y_pred (list of list): the different y preds to vote on
+    Returns:
+        y_pred (list): the majority predictions
+    """
+    classes = []
+    for val in Y_pred:
+        for inner_val in val:
+            if [inner_val] not in classes:
+                classes.append([inner_val])
+    
+    for i in range(len(classes)):
+        classes[i].append(0)
+
+    y_pred = []
+
+    # now do the voting
+    for j in range(len(Y_pred[0])):
+        # zero out the values since we can vote more than once
+        for i in range(len(classes)):
+            classes[i][1] = 0
+        
+        # now vote
+        for val in Y_pred:
+            for i in range(len(classes)):
+                if classes[i][0] == val[j]:
+                    classes[i][1] += 1
+        classes.sort(reverse=True, key=operator.itemgetter(-1))
+        y_pred.append(classes[0][0])
+
+    return y_pred
+
+def generate_class_counter(y):
+    """Helper function for generating a list
+       of all the possible class labels with a 0 appended
+    Args:
+        y (list): list of class labels
+    Returns:
+        classes (2D list): the list of labels with 0 appended
+    """
+
+    classes = []
+    for val in y:
+        if [val] not in classes:
+            classes.append([val])
+    
+    for i in range(len(classes)):
+        classes[i].append(0)
+    return classes
+

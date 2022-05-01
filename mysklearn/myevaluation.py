@@ -234,6 +234,10 @@ def bootstrap_sample(X, y=None, n_samples=None, random_state=None):
     y_sample = None
     y_out_of_bag = None
 
+    # for very similar datasets
+    X_indexes = []
+    y_indexes = []
+
     if y is not None:
         y_sample = []
         y_out_of_bag = []
@@ -244,17 +248,20 @@ def bootstrap_sample(X, y=None, n_samples=None, random_state=None):
     if random_state is not None:
         # random_state was causing the shuffle to swap in place
         np.random.seed(random_state)
-
     # add samples to the sample lists
     for _ in range(samples):
         rand_index = np.random.randint(0, len(X)) # rand int in [0, len(X))
+        # print(rand_index, end=" ")
         X_sample.append(X[rand_index])
         if y is not None:
             y_sample.append(y[rand_index])
+    # print()
     
     # now find the ones that weren't added
     for i in range(len(X)):
+        # print(X[i])
         if X[i] not in X_sample:
+            # print("found one not in", X[i])
             X_out_of_bag.append(X[i])
             if y is not None:
                 y_out_of_bag.append(y[i])
