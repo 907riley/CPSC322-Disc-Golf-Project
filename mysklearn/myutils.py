@@ -13,6 +13,7 @@ import importlib
 import math
 import operator
 from random import random
+import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.metrics import accuracy_score
 # # uncomment once you paste your mypytable.py into mysklearn package
@@ -849,4 +850,25 @@ def generate_class_counter(y):
     for i in range(len(classes)):
         classes[i].append(0)
     return classes
+
+def box_and_whiskers_helper(data, xlabels, title):
+    """Creates a box and whisker plot from inputs
+    
+    Args:
+        data (list): list of lists for creating multiple
+            box and whiskers graphs on the same figure
+        xlabels (list): list of labels for each graph
+        title (string): title of the graph
+    
+    Returns: 
+        displays the graph
+    """  
+
+    plt.figure()
+    plt.figure(figsize=(15, 10))
+    plt.title(title)
+    plt.boxplot(data)
+    plt.xticks([i for i in range(1, len(xlabels) + 1)], xlabels)
+    plt.xticks(rotation=30, ha="right") # parallel lines
+    plt.show()
 
