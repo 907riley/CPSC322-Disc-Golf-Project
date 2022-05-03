@@ -1,16 +1,22 @@
+<!DOCTYPE html>
+<html>
 <head>
     <link rel="stylesheet" type="text/css" href="../static/style.css">
+    <meta charset="utf-8">
 </head>
 <body>
     <div class="form">
-        <label for="pokemon">Enter Pokemon Name Here:</label>
-        <input type="text" list="pokemon" />
-        <datalist id="pokemon">
-          <div id="options"></div>
-        </datalist>
-        <input type="submit">
-      </div>
+      <form method="post" action="{{ url_for('prediction') }}">
+      <label for="pokemon">Enter Pokemon Name Here:</label>
+      <input list="pokemon" id = "poke" name = "poke"/>
+      <datalist id="pokemon">
+        <div id="options"></div>
+      </datalist>
+      <button>Submit</button>
+    </form>
+    </div>
 </body>
+</html>
 <script>
 const pokemon = ["Bulbasaur", "Ivysaur", "Venusaur", "Charmander", "Charmeleon", 
 "Charizard", "Squirtle", "Wartortle", "Blastoise", "Caterpie", "Metapod", "Butterfree", 
@@ -131,9 +137,8 @@ const pokemon = ["Bulbasaur", "Ivysaur", "Venusaur", "Charmander", "Charmeleon",
 
 var option = "";
 
-for (let i = 0; i < pokemon.length; i++)
-{
-    option += '<option value="' + pokemon[i] + '">';
+for (let i = 0; i < pokemon.length; i++){
+    option += '<option name="pokemon" id="pokemon" value="' + pokemon[i] + '">';
 }
 
 document.getElementById("options").innerHTML = option;

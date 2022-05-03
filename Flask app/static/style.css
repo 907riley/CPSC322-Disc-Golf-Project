@@ -2,3 +2,11 @@
     body  {
         background-image: url('pika.png');
     }
+    .form {
+        margin: auto;
+        width: 50%;
+        border: 3px solid rgb(255, 252, 61);
+        padding: 10px;
+        background-color: oldlace;
+        font-family: "Lucida Console", "Courier New", monospace;
+    }
